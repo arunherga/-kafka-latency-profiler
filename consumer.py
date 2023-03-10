@@ -57,7 +57,7 @@ try:
 
 
                 if len(latency_arry) == 10:
-                     avg = (avg*count+sum(latency_arry))/count
+                     avg = (avg*(count-10)+sum(latency_arry))/count
                      print(avg)
                      latency_arry = []
                 
