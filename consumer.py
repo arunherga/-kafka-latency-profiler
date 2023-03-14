@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--enable-sampling', default=True, type=bool, help='Enabla/disable sampling of data by 30%')
     parser.add_argument('--run-time', default= 120, type=int, help='Consumer closes after 120 seconds by default')
     parser.add_argument('--t1', default='ingetion_time',choices=['ingetion_time','producer_time'], help='configarable to ingestion time or CreateTime')
-    parser.add_argument('--t2', default='produce_time',choices=['produce_time','consumer_time'], help='hh')
+    parser.add_argument('--t2', default='produce_time',choices=['produce_time','consumer_time'], help='configurable to produce time or consume time')
     
     args = parser.parse_args()
     
