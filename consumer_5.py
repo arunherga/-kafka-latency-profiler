@@ -1,4 +1,4 @@
-def read_ccloud_config(config_file):
+def read_ccloud_config(config_file,use):
     conf = {}
     with open(config_file) as fh:
         for line in fh:
@@ -6,7 +6,23 @@ def read_ccloud_config(config_file):
             if len(line) != 0 and line[0] != "#":
                 parameter, value = line.strip().split('=', 1)
                 conf[parameter] = value.strip()
-    return conf
+    return config_sorter(conf,use)
+
+def config_sorter(conf,use):
+    if (use == 'producer'):
+        req = ['bootstrap.servers','security.protocol','sasl.mechanisms','sasl.username','sasl.password']
+        props = {key: conf[key] for key in req}
+        return props
+    elif (use == 'sr'):
+        req =['url','basic.auth.user.info']
+        props = {key:conf[key] for key in req}
+        return props
+    elif (use == 'consumer'):
+        req = ['bootstrap.servers','group.id','security.protocol','sasl.mechanisms','sasl.username','sasl.password','auto.offset.reset','enable.auto.commit','connections.max.idle.ms']
+        props = {key:conf[key] for key in req}
+        return props
+
+
 
 # def read_kafka_producer_config(config_file):
 #     conf = {}
@@ -78,6 +94,7 @@ from confluent_kafka import Consumer, TopicPartition, KafkaError,DeserializingCo
 from confluent_kafka.schema_registry.json_schema import JSONDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.serialization import SerializationContext, MessageField
+from confluent_kafka.schema_registry.avro import AvroSerializer
 import random
 import json
 import csv
@@ -93,7 +110,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Kafka Consumer')
 
-    parser.add_argument('--consumer_config', required=True,help='Absolute path to configuration.properties file that contains settings and properties used to configure a Kafka consumer application to consume messages from a Kafka cluster.')
+    parser.add_argument('--config_file', required=True,help='Absolute path to configuration.properties file that contains settings and properties used to configure a Kafka consumer application to consume messages from a Kafka cluster.')
     parser.add_argument('--bootstrap_servers', required=False, help='A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. list should be in the form host1:port1,host2:port2,...')
     parser.add_argument('--input_topic', required=False, help='Kafka topic to consume messages from.')
     parser.add_argument('--group_id', default="newgroup01", help='A unique string that identifies the consumer group this consumer belongs to. This property is required if the consumer uses either the group management functionality by using subscribe(topic) or the Kafka-based offset management strategy')
@@ -112,18 +129,19 @@ if __name__ == '__main__':
     parser.add_argument('--result_dump_producer_config',help=' configuration.properties file that contains settings and properties used to configure a Kafka producer application to dump consumer results' )
     parser.add_argument('--output_topic',help='Kafka topic to dump consumer output')
     parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
-    parser.add_argument('--confluent_sr_url',default='None',help='Enter url of conflunt schema registary')
-    parser.add_argument('--confluent_sr_apikey',help='Enter api key of conflunet SR')
-    parser.add_argument('--confluent_sr_apisecret',help='Enter api secret of conflunent SR ')
+    parser.add_argument('--confluent_sr_config',default='None',help='Enter url of conflunt schema registary')
+    #parser.add_argument('--confluent_sr_apikey',help='Enter api key of conflunet SR')
+    #parser.add_argument('--confluent_sr_apisecret',help='Enter api secret of conflunent SR ')
+
 
 
 
 
     args = parser.parse_args()
 
-    props = read_ccloud_config(args.consumer_config)
+    properties = read_ccloud_config(args.config_file,'consumer')
     topic=args.input_topic
-    props['group.id']=args.group_id
+    properties['group.id']=args.group_id
     sampling = (args.enable_sampling == True)
     run_interval=args.run_interval
     t1=args.t1
@@ -133,9 +151,9 @@ if __name__ == '__main__':
     producer_prop=args.result_dump_producer_config
     output_topic=args.output_topic
     schema_location=args.consumer_schema_json
-    confluent_url=args.confluent_sr_url
-    api_key=args.confluent_sr_apikey
-    api_secret=args.confluent_sr_apisecret
+    confluent_sr_config=args.confluent_sr_config
+    #api_key=args.confluent_sr_apikey
+    #api_secret=args.confluent_sr_apisecret
 
     print("\n\nConsumer has started!!\n")
 
@@ -191,38 +209,44 @@ if __name__ == '__main__':
       with open("schema.json") as f:
           schema_str = f.read()
 
-    if (confluent_url != 'None'):
-         curl_cmd = [
-        "curl",
-        "-s",
-        "-u",
-        f"{api_key}:{api_secret}",
-        "GET",
-        f"{confluent_url}"
-    ]
+    if (confluent_sr_config != 'None'):
+         schema_registary =SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
+         latest = schema_registary.get_latest_version(f'{topic}-value')
+         schema_str = schema_registary.get_schema(latest.schema_id)
+         schema_str=schema_str.schema_str
 
-    # Run the curl command and capture the output
-    output = subprocess.check_output(curl_cmd)
 
-    # Print the output
-    #print(output.decode())
+    #      curl_cmd = [
+    #     "curl",
+    #     "-s",
+    #     "-u",
+    #     f"{api_key}:{api_secret}",
+    #     "GET",
+    #     f"{confluent_url}"
+    # ]
 
-    schema_dict = json.loads(output)
+    # # Run the curl command and capture the output
+    # output = subprocess.check_output(curl_cmd)
 
-    # Pretty-print the dictionary
-    #print(json.dumps(schema_dict, indent=4))
+    # # Print the output
+    # #print(output.decode())
 
-    schema_str_1 = schema_dict["schema"]
-    schema_json = json.loads(schema_str_1)
+    # schema_dict = json.loads(output)
 
-    # Print the schema JSON object in a nicely formatted way
-    schema_str = json.dumps(schema_json, indent=2)
-    #print(p)
+    # # Pretty-print the dictionary
+    # #print(json.dumps(schema_dict, indent=4))
+
+    # schema_str_1 = schema_dict["schema"]
+    # schema_json = json.loads(schema_str_1)
+
+    # # Print the schema JSON object in a nicely formatted way
+    # schema_str = json.dumps(schema_json, indent=2)
+    # #print(p)
         
 
     json_deserializer = JSONDeserializer(schema_str,from_dict=dict_to_user)
 
-    consumer=Consumer(props)    
+    consumer=Consumer(properties)    
     consumer.subscribe([topic])
     
     topic_partitions = [TopicPartition(topic, p) for p in consumer.list_topics(topic).topics[topic].partitions]
@@ -283,6 +307,9 @@ if __name__ == '__main__':
                     elif (t1.split('.')[0]) =='value':
                         i = t1.split('.')[1]
                         time1 = getattr(user, i)
+                    elif (t1.split('.')[0]) == 'key':
+                        i = t1.split('.')[1]
+                        time1 = getattr(user,i)                   
 
                     
                     
@@ -314,28 +341,57 @@ if __name__ == '__main__':
             print("\nNumber of messages sampled(sampling disabled):\t\t",count)
             print("\nAverage latency in ms:\t\t",avg)
 
-        print("\n\nQunatiles of the sampled messages:")
+        print("\n\nQuantiles of the latencies measured in ms:")
 
         quantiles = np.quantile(latency_arry, [.5, .9, .95, .99, .999])
-        print("\n\t50 percerntile:\t",quantiles[0])
-        print("\n\t90 percentile:\t",quantiles[1])
-        print("\n\t95 percentile:\t",quantiles[2])
-        print("\n\t99 percentile:\t",quantiles[3])
-        print("\n\t99.9 percentile:",quantiles[4])
+        print("\n\t50th percerntile:\t",quantiles[0])
+        print("\n\t90th percentile:\t",quantiles[1])
+        print("\n\t95th percentile:\t",quantiles[2])
+        print("\n\t99th percentile:\t",quantiles[3])
+        print("\n\t99.9th percentile:",quantiles[4])
         
 
-        # if output == 'dumpToTopic':
-        #   producer = Producer(read_ccloud_config(producer_prop))
-        #   latency_arry=latency_arry
-        #   for i, element in enumerate(latency_arry):
-        #     key = str(i)  # Convert the index to a string
-        #     value = json.dumps(element)  # Convert the integer to a JSON string
-        #     producer.produce(output_topic, key=key, value=value)
-        #     #producer.produce('topic_6', key=i.to_bytes((count.bit_length() + 7)// 8, byteorder='big'), value=element.to_bytes((count.bit_length() + 7)// 8, byteorder='big'))
+        if output_type == 'dumpToTopic':
+          schema_string ="""
+            {
+              "namespace": "example.avro",
+              "type": "record",
+              "name": "result",
+              "fields": [
+                  {"name": "average", "type": "int"},
+                  {"name": "percentile50", "type": "int"},
+                  {"name": "percentile90", "type": "int"},
+                  {"name": "percentile95", "type": "int"},
+                  {"name": "percentile99", "type": "int"},
+                  {"name": "percentile999", "type": "int"}
+              ]
+            }
+            """
+          result = {
+                    "average": int(avg),
+                    "percentile50": int(quantiles[0]),
+                    "percentile90": int(quantiles[1]),
+                    "percentile95": int(quantiles[2]),
+                    "percentile99": int(quantiles[3]),
+                    "percentile999": int(quantiles[4])
+                  }
 
-        #   # Wait for any outstanding messages to be delivered and delivery reports to be received
-        #   producer.flush()
-        #   print("\n\nData written successfully to :\t",output_topic)
+          schema_registry_client = SchemaRegistryClient(conf=read_ccloud_config(args.config_file,'sr'))
+          avro_serializer = AvroSerializer(schema_registry_client,schema_string)  
+          producer=Producer(read_ccloud_config(args.config_file,'producer'))
+          producer.produce(topic= output_topic,value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)))
+          
+
+
+          # for i, element in enumerate(latency_arry):
+          #   key = str(i)  # Convert the index to a string
+          #   value = json.dumps(element)  # Convert the integer to a JSON string
+          #   producer.produce(output_topic, key=key, value=value)
+          #   #producer.produce('topic_6', key=i.to_bytes((count.bit_length() + 7)// 8, byteorder='big'), value=element.to_bytes((count.bit_length() + 7)// 8, byteorder='big'))
+
+          # # Wait for any outstanding messages to be delivered and delivery reports to be received
+          producer.flush()
+          print("\n\nData written successfully to :\t",output_topic)
 
         
         if (output_type == 'localFileDump'):
@@ -352,7 +408,7 @@ if __name__ == '__main__':
 
                        
         
-        elif output == 'console':
+        elif output_type == 'console':
             print(latency_arry)
 
         print("consumer closing")
