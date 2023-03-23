@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--t2',default='consumerWallClockTime',choices={'consumerWallClockTime','IngestionTime'},help='It is one of the time parameter (used to measure latency->t2-t1). ConsumerWallClockTime -this is a pointer to the current time, as seen in the conusumer. IngestionTime imply time when message is recorded in kafka topic')
     parser.add_argument('--consumer_output',default='console',choices={'console','localFileDump','dumpToTopic'},help='console - Consumer output is printed in console. localFileDump - stores the output of consumer as a csv file(by default) and require to be followed by --result-dump-local-filepath. dumpToTopic - stores consumer output in kafka topic requires to be followed by --result-dump-producer-config')
     parser.add_argument('--result_dump_local_filepath',help='file path to store consumer output ')
-    parser.add_argument('--result_dump_producer_config',help=' configuration.properties file that contains settings and properties used to configure a Kafka producer application to dump consumer results' )
+    #parser.add_argument('--result_dump_producer_config',help=' configuration.properties file that contains settings and properties used to configure a Kafka producer application to dump consumer results' )
     parser.add_argument('--output_topic',help='Kafka topic to dump consumer output')
     #parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
     #parser.add_argument('--confluent_sr_config',default='None',help='Enter url of conflunt schema registary')
@@ -108,11 +108,12 @@ if __name__ == '__main__':
     t2=args.t2
     output_type=args.consumer_output
     local_filepath=args.result_dump_local_filepath
-    producer_prop=args.result_dump_producer_config
+    #producer_prop=args.result_dump_producer_config
     output_topic=args.output_topic
     schema_location=args.consumer_schema_json
     #confluent_sr_config=args.confluent_sr_config
     value_deserializer = args.value_deserializer
+    key_deserializer = args.key_deserializer
 
     pattern = r"\"ordertime\":(\d+)"
 
@@ -124,6 +125,38 @@ if __name__ == '__main__':
       with open("schema.json") as f:
     
           schema_str = f.read()
+    
+
+
+    if (key_deserializer == 'AvroDeserializer' or 'JSONSchemaDeserializer'):
+    
+        schema_registary =SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
+   
+        latest = schema_registary.get_latest_version(f'{topic}-key')
+        
+        schema_str_key = schema_registary.get_schema(latest.schema_id)
+   
+        schema_str_key=schema_str_key.schema_str
+         #print(schema_str)
+
+
+    if key_deserializer == 'JSONSchemaDeserializer':         
+
+      #json_deserializer = JSONDeserializer(schema_str,from_dict=dict_to_user)
+      json_deserializer = JSONDeserializer(schema_str=schema_str_key)
+    
+    
+    elif key_deserializer == 'AvroDeserializer':
+    
+      schema_registry_client = SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
+    
+      avro_deserializer = AvroDeserializer(schema_registry_client=schema_registry_client,schema_str=schema_str_key)
+    
+    
+    elif key_deserializer == 'StringDeserializer':
+    
+       string_deserializer = StringDeserializer(codec='utf_8')
+
 
     
     if (value_deserializer == 'AvroDeserializer' or 'JSONSchemaDeserializer'):
