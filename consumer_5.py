@@ -90,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('--result_dump_local_filepath',help='file path to store consumer output ')
     #parser.add_argument('--result_dump_producer_config',help=' configuration.properties file that contains settings and properties used to configure a Kafka producer application to dump consumer results' )
     parser.add_argument('--output_topic',help='Kafka topic to dump consumer output')
-    #parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
+    parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
     #parser.add_argument('--confluent_sr_config',default='None',help='Enter url of conflunt schema registary')
     parser.add_argument('--value_deserializer',required=True,choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for value that implements the org.apache.kafka.common.serialization.Deserializer interface.')
     parser.add_argument('--key-deserializer',choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for key that implements the org.apache.kafka.common.serialization.Deserializer interface.')
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     
 
 
-    if (key_deserializer == 'AvroDeserializer' or 'JSONSchemaDeserializer'):
+    if (key_deserializer == ('AvroDeserializer' or 'JSONSchemaDeserializer')):
     
         schema_registary =SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
    
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
 
     
-    if (value_deserializer == 'AvroDeserializer' or 'JSONSchemaDeserializer'):
+    if (value_deserializer == ('AvroDeserializer' or 'JSONSchemaDeserializer')):
     
         schema_registary =SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
    
@@ -415,9 +415,6 @@ if __name__ == '__main__':
                     latency = (time2-time1)
                     
                     latency_arry.append(latency)
-                
-
-                
 
 
 
@@ -542,7 +539,7 @@ if __name__ == '__main__':
         elif output_type == 'console':
             print(latency_arry)
 
-        print("consumer closing")
+        print("\n\n\t\t\t\t\t\t\t\t\t\t\tconsumer closing\n\n")
             
         
         
