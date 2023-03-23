@@ -332,6 +332,92 @@ if __name__ == '__main__':
                     latency = (time2-time1)
                     
                     latency_arry.append(latency)
+                
+
+                if key_deserializer == 'JSONSchemaDeserializer':
+          
+                  user = json_deserializer(msg.key(), SerializationContext(msg.topic(), MessageField.KEY))
+          
+          
+                if key_deserializer == 'AvroDeserializer':
+          
+                  user = avro_deserializer(msg.key(), SerializationContext(msg.topic(), MessageField.KEY))
+                # if deserializer == 'StringDeserializer':
+                #     user = string_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+                
+          
+                if ((user is not None) and (key_deserializer == ('JSONSchemaDeserializer' or 'AvroDeserializer'))) :
+                
+                    count=count+1
+                    
+                    # print("Order record {}: \n \tordertime: {}\n"
+                    #     "\tItem Number: {}\n"
+                    #     "\tAddress: {}\n"
+                    #     .format(msg.key(), user.ordertime,
+                    #             user.itemid,
+                    #             user.address))
+                    #print(user)
+              
+                    #print(user['ordertime']) 
+                    if t1=="IngestionTime":
+                        time1=int(msg.timestamp()[1])
+                        
+                
+                    elif (t1.split('.')[0]) =='value':
+                        #i = t1.split('.')[1]
+                        time1 = user[t1.split('.')[1]]
+                
+                
+                    elif (t1.split('.')[0]) == 'key':
+                
+                        #i = t1.split('.')[1]
+                        #time1 = getattr(user,i)
+                        user1 = json_deserializer(msg.key(), SerializationContext(msg.topic(), MessageField.VALUE))
+                        time1 = user1[t1.split('.')[1]]               
+
+                    
+                    if t2 == 'IngestionTime':
+                
+                        time2=int(msg.timestamp()[1])
+                
+                
+                    elif t2 == 'consumerWallClockTime':
+                
+                        time2= time.time()*1000               
+                    
+                    latency = (time2-time1)
+                    latency_arry.append(latency)
+                
+                
+                if ((user is not None) and (key_deserializer == ('StringDeserializer' or 'JSONDeserializer'))):
+                    
+                    count = count+1
+
+                    val = msg.key().decode('utf-8')
+
+                    if t1=="IngestionTime":
+                        time1=int(msg.timestamp()[1])
+                    
+                    else:
+                        mat = re.search(pattern,val)
+                        time1 = int(mat.group(1))
+
+                    
+                    if t2 == 'IngestionTime':
+                
+                        time2=int(msg.timestamp()[1])
+                
+                
+                    elif t2 == 'consumerWallClockTime':
+                
+                        time2= time.time()*1000               
+                    
+                    latency = (time2-time1)
+                    
+                    latency_arry.append(latency)
+                
+
+                
 
 
 
