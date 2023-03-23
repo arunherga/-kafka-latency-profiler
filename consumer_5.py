@@ -25,33 +25,33 @@ def config_sorter(conf,use):
 def write_to_csv(file_location, data):          
     data.to_csv(f'{file_location}', index=False)
     print(f"\nData written to {file_location} successfully.")
-class User(object):
-    """
-    User record
-    """
+# class User(object):
+#     """
+#     User record
+#     """
 
-    def __init__(self, ordertime=None, orderid=None, itemid=None, orderunits=None, address=None):
-        self.ordertime = ordertime
-        self.orderid = orderid
-        self.itemid = itemid
-        self.orderunits = orderunits
-        self.address = address
+#     def __init__(self, ordertime=None, orderid=None, itemid=None, orderunits=None, address=None):
+#         self.ordertime = ordertime
+#         self.orderid = orderid
+#         self.itemid = itemid
+#         self.orderunits = orderunits
+#         self.address = address
 
 
 
-def dict_to_user(obj, ctx):
-    """
-    Converts object literal(dict) to a Order instance.
-    """
+# def dict_to_user(obj, ctx):
+#     """
+#     Converts object literal(dict) to a Order instance.
+#     """
 
-    if obj is None:
-        return None
+#     if obj is None:
+#         return None
 
-    return User(ordertime=obj['ordertime'],
-             orderid=obj['orderid'],
-             itemid=obj['itemid'],
-             orderunits=obj['orderunits'],
-             address=obj['address'])
+#     return User(ordertime=obj['ordertime'],
+#              orderid=obj['orderid'],
+#              itemid=obj['itemid'],
+#              orderunits=obj['orderunits'],
+#              address=obj['address'])
 
 import argparse
 import time
@@ -83,14 +83,14 @@ if __name__ == '__main__':
     #parser.add_argument('--enable-auto-commit',type=bool,choices={True,False},help='It determines whether the Kafka consumer should automatically commit its current offset position to the Kafka broker at regular intervals. When enabled to True (which is by default) the consumer will automatically commit the offset based on the "auto.commit.interval.ms" property value. If "enable.auto.commit" is set to "false", the consumer must manually commit the offset position after processing messages.  ')
     #parser.add_argument('--auto-offset-reset',choices={'earliest','latest'},help='It determines what to do when there is no initial offset or when the current offset is out of range.earliest: automatically reset the offset to the earliest offset.latest: automatically reset the offset to the latest offset.')
     parser.add_argument('--enable_sampling',default=True,help='enable/disable sampling by 30 percent')
-    parser.add_argument('--run_interval',default=15,type=int,help='duration of time during which the consumer is actively running and consuming messages from a Kafka topic.')
+    parser.add_argument('--run_interval',default=20,type=int,help='duration of time during which the consumer is actively running and consuming messages from a Kafka topic.')
     parser.add_argument('--t1',default='IngestionTime',help='It is one of time parameter(used to measure latency->t2-t1). value.<column name> - this is pointer to message value timestamp i.e any column/object in value that points to event time. key.<column name> - this is pointer to message key timestamp i.e any column/object in key that points to event time. IngestionTime imply time when message is recorded in kafka topic.')
     parser.add_argument('--t2',default='consumerWallClockTime',choices={'consumerWallClockTime','IngestionTime'},help='It is one of the time parameter (used to measure latency->t2-t1). ConsumerWallClockTime -this is a pointer to the current time, as seen in the conusumer. IngestionTime imply time when message is recorded in kafka topic')
     parser.add_argument('--consumer_output',default='console',choices={'console','localFileDump','dumpToTopic'},help='console - Consumer output is printed in console. localFileDump - stores the output of consumer as a csv file(by default) and require to be followed by --result-dump-local-filepath. dumpToTopic - stores consumer output in kafka topic requires to be followed by --result-dump-producer-config')
     parser.add_argument('--result_dump_local_filepath',help='file path to store consumer output ')
     #parser.add_argument('--result_dump_producer_config',help=' configuration.properties file that contains settings and properties used to configure a Kafka producer application to dump consumer results' )
     parser.add_argument('--output_topic',help='Kafka topic to dump consumer output')
-    parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
+    #parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
     #parser.add_argument('--confluent_sr_config',default='None',help='Enter url of conflunt schema registary')
     parser.add_argument('--value_deserializer',required=True,choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for value that implements the org.apache.kafka.common.serialization.Deserializer interface.')
     parser.add_argument('--key-deserializer',choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for key that implements the org.apache.kafka.common.serialization.Deserializer interface.')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     local_filepath=args.result_dump_local_filepath
     #producer_prop=args.result_dump_producer_config
     output_topic=args.output_topic
-    schema_location=args.consumer_schema_json
+    #schema_location=args.consumer_schema_json
     #confluent_sr_config=args.confluent_sr_config
     value_deserializer = args.value_deserializer
     key_deserializer = args.key_deserializer
@@ -125,11 +125,11 @@ if __name__ == '__main__':
     print("\n\n\t\t\t\t\t\t\t\t\t\t\tConsumer has started!!\n")
     
     
-    if (schema_location != 'None'):
+    # if (schema_location != 'None'):
     
-      with open("schema.json") as f:
+    #   with open("schema.json") as f:
     
-          schema_str = f.read()
+    #       schema_str = f.read()
     
 
 
@@ -207,14 +207,14 @@ if __name__ == '__main__':
     #print(topic_partitions)
     print("Number of partition in the topic:",len(topic_partitions))
 
-    total_message = 0
+    # total_message = 0
     
     
-    for tp in topic_partitions:
+    # for tp in topic_partitions:
     
-        total_message=total_message+consumer.get_watermark_offsets(tp)[1]
+    #     total_message=total_message+consumer.get_watermark_offsets(tp)[1]
     
-    print("\nTotal Messages in topic\t:\t", total_message)
+    # print("\nTotal Messages in topic\t:\t", total_message)
     
     count = 0
     
@@ -308,12 +308,12 @@ if __name__ == '__main__':
                           time1 = user[t1.split('.')[1]]
                   
                   
-                      elif (t1.split('.')[0]) == 'key':
+                      # elif (t1.split('.')[0]) == 'key':
                   
-                          #i = t1.split('.')[1]
-                          #time1 = getattr(user,i)
-                          user1 = json_deserializer(msg.key(), SerializationContext(msg.topic(), MessageField.VALUE))
-                          time1 = user1[t1.split('.')[1]]               
+                      #     #i = t1.split('.')[1]
+                      #     #time1 = getattr(user,i)
+                      #     user1 = json_deserializer(msg.key(), SerializationContext(msg.topic(), MessageField.VALUE))
+                      #     time1 = user1[t1.split('.')[1]]               
 
                       
                       if t2 == 'IngestionTime':
