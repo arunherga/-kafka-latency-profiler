@@ -55,6 +55,7 @@ def write_to_csv(file_location, data):
 
 import argparse
 import time
+from datetime import datetime
 from confluent_kafka import Consumer, TopicPartition, KafkaError,DeserializingConsumer,Producer
 from confluent_kafka.schema_registry.json_schema import JSONDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Kafka Consumer')
 
-    parser.add_argument('--config_file', required=True,help='Absolute path to configuration.properties file that contains settings and properties used to configure a Kafka consumer application to consume messages from a Kafka cluster.')
+    parser.add_argument('--consumer_config_file', required=True,help='Absolute path to configuration.properties file that contains settings and properties used to configure a Kafka consumer application to consume messages from a Kafka cluster.')
     parser.add_argument('--bootstrap_servers', required=False, help='A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. list should be in the form host1:port1,host2:port2,...')
     parser.add_argument('--input_topic', required=False, help='Kafka topic to consume messages from.')
     parser.add_argument('--group_id', default="newgroup01", help='A unique string that identifies the consumer group this consumer belongs to. This property is required if the consumer uses either the group management functionality by using subscribe(topic) or the Kafka-based offset management strategy')
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     #parser.add_argument('--heartbeat-interval-ms',help='The expected time between heartbeats to the consumer coordinator when using Kafkas group management facilities. Heartbeats are used to ensure that the consumers session stays active and to facilitate rebalancing when new consumers join or leave the group. The default setting is 3 seconds')
     #parser.add_argument('--enable-auto-commit',type=bool,choices={True,False},help='It determines whether the Kafka consumer should automatically commit its current offset position to the Kafka broker at regular intervals. When enabled to True (which is by default) the consumer will automatically commit the offset based on the "auto.commit.interval.ms" property value. If "enable.auto.commit" is set to "false", the consumer must manually commit the offset position after processing messages.  ')
     #parser.add_argument('--auto-offset-reset',choices={'earliest','latest'},help='It determines what to do when there is no initial offset or when the current offset is out of range.earliest: automatically reset the offset to the earliest offset.latest: automatically reset the offset to the latest offset.')
-    parser.add_argument('--enable_sampling',default=True,help='enable/disable sampling by 30 percent')
+    parser.add_argument('--enable_sampling',action="store_true",default=False,help='enable/disable sampling by 30 percent')
     parser.add_argument('--run_interval',default=20,type=int,help='duration of time during which the consumer is actively running and consuming messages from a Kafka topic.')
     parser.add_argument('--t1',default='IngestionTime',help='It is one of time parameter(used to measure latency->t2-t1). value.<column name> - this is pointer to message value timestamp i.e any column/object in value that points to event time. key.<column name> - this is pointer to message key timestamp i.e any column/object in key that points to event time. IngestionTime imply time when message is recorded in kafka topic.')
     parser.add_argument('--t2',default='consumerWallClockTime',choices={'consumerWallClockTime','IngestionTime'},help='It is one of the time parameter (used to measure latency->t2-t1). ConsumerWallClockTime -this is a pointer to the current time, as seen in the conusumer. IngestionTime imply time when message is recorded in kafka topic')
@@ -94,14 +95,15 @@ if __name__ == '__main__':
     #parser.add_argument('--confluent_sr_config',default='None',help='Enter url of conflunt schema registary')
     parser.add_argument('--value_deserializer',required=True,choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for value that implements the org.apache.kafka.common.serialization.Deserializer interface.')
     parser.add_argument('--key-deserializer',choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for key that implements the org.apache.kafka.common.serialization.Deserializer interface.')
+    parser.add_argument('--producer_config_file',help='configuration.properties file that contains properties used to configure producer')
 
 
 
     args = parser.parse_args()
 
-    properties = read_ccloud_config(args.config_file,'consumer')
+    consumer_properties = read_ccloud_config(args.consumer_config_file,'consumer')
     topic=args.input_topic
-    properties['group.id']=args.group_id
+    consumer_properties['group.id']=args.group_id
     sampling = (args.enable_sampling == True)
     run_interval=args.run_interval
     t1=args.t1
@@ -114,6 +116,7 @@ if __name__ == '__main__':
     #confluent_sr_config=args.confluent_sr_config
     value_deserializer = args.value_deserializer
     key_deserializer = args.key_deserializer
+    producer_properties = read_ccloud_config(args.producer_config_file,'producer')
     
 
     if t1 != 'IngestionTime':
@@ -166,7 +169,7 @@ if __name__ == '__main__':
 
     if (value_deserializer == ('AvroDeserializer') or value_deserializer == ('JSONSchemaDeserializer')):
     
-        schema_registary =SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
+        schema_registary =SchemaRegistryClient(read_ccloud_config(args.consumer_config_file,'sr'))
    
         latest = schema_registary.get_latest_version(f'{topic}-value')
         
@@ -187,7 +190,7 @@ if __name__ == '__main__':
     
     elif value_deserializer == 'AvroDeserializer':
     
-      schema_registry_client = SchemaRegistryClient(read_ccloud_config(args.config_file,'sr'))
+      schema_registry_client = SchemaRegistryClient(read_ccloud_config(args.consumer_config_file,'sr'))
     
       avro_deserializer = AvroDeserializer(schema_registry_client=schema_registry_client,schema_str=schema_str)
 
@@ -198,7 +201,7 @@ if __name__ == '__main__':
     
        string_deserializer = StringDeserializer(codec='utf_8')
 
-    consumer=Consumer(properties)    
+    consumer=Consumer(consumer_properties)    
     
     consumer.subscribe([topic])
     
@@ -481,9 +484,16 @@ if __name__ == '__main__':
     finally:
         
         consumer.close()
+
+        n = datetime.now()
         
+        date_string = n.strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+
         
         print("\nTotal Message read by consumer\t:\t",count)
+
+        print("\nCurrent Time\t:\t",date_string)
 
         # with open('numbers.csv', 'w', newline='') as file:
         #   writer = csv.writer(file)
@@ -542,7 +552,8 @@ if __name__ == '__main__':
                   {"name": "percentile90", "type": "int"},
                   {"name": "percentile95", "type": "int"},
                   {"name": "percentile99", "type": "int"},
-                  {"name": "percentile999", "type": "int"}
+                  {"name": "percentile999", "type": "int"},
+                  {"name": "Date_Time", "type": "string"}
               ]
             }
             """
@@ -553,15 +564,16 @@ if __name__ == '__main__':
                     "percentile90": int(quantiles[1]),
                     "percentile95": int(quantiles[2]),
                     "percentile99": int(quantiles[3]),
-                    "percentile999": int(quantiles[4])
+                    "percentile999": int(quantiles[4]),
+                    "Date_Time": str(date_string)
                   }
 
 
-          schema_registry_client = SchemaRegistryClient(conf=read_ccloud_config(args.config_file,'sr'))
+          schema_registry_client = SchemaRegistryClient(conf=read_ccloud_config(args.producer_config_file,'sr'))
 
           avro_serializer = AvroSerializer(schema_registry_client,schema_string)  
 
-          producer=Producer(read_ccloud_config(args.config_file,'producer'))
+          producer=Producer(producer_properties)
 
           producer.produce(topic= output_topic,value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)))     
 
@@ -586,7 +598,8 @@ if __name__ == '__main__':
                    'quantile_90': quantiles[1],
                    'quantile_90': quantiles[2],
                    'quantile_99': quantiles[3],
-                   'quantile_99.9':quantiles[4]})
+                   'quantile_99.9':quantiles[4],
+                   'date_time':date_string})
             
           write_to_csv(local_filepath, df)
 
