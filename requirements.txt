@@ -1,0 +1,7 @@
+argparse
+confluent-kafka
+numpy
+pandas
+requests
+jsonschema
+fastavro
