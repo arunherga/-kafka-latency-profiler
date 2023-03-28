@@ -24,7 +24,7 @@ def config_sorter(conf,use):
 
 def write_to_csv(file_location, data):          
     data.to_csv(f'{file_location}', index=False)
-    print(f"\nData written to {file_location} successfully.")
+    print(f"\nLatency measured written to {file_location} successfully.")
 # class User(object):
 #     """
 #     User record
@@ -52,6 +52,26 @@ def write_to_csv(file_location, data):
 #              itemid=obj['itemid'],
 #              orderunits=obj['orderunits'],
 #              address=obj['address'])
+
+def delivery_report(err, msg):
+    """
+    Reports the failure or success of a message delivery.
+    Args:
+        err (KafkaError): The error that occurred on None on success.
+        msg (Message): The message that was produced or failed.
+    Note:
+        In the delivery report callback the Message.key() and Message.value()
+        will be the binary format as encoded by any configured Serializers and
+        not the same object that was passed to produce().
+        If you wish to pass the original object(s) for key and value to delivery
+        report callback we recommend a bound callback or lambda where you pass
+        the objects along.
+    """
+
+    if err is not None:
+        print("Delivery failed for User record {}: {}".format(msg.key(), err))
+        return
+    print('\n\n Latency measured successfully produced to {} Partition[{}] at offset {}'.format(msg.topic(), msg.partition(), msg.offset()))
 
 import argparse
 import time
@@ -575,7 +595,7 @@ if __name__ == '__main__':
 
           producer=Producer(producer_properties)
 
-          producer.produce(topic= output_topic,value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)))     
+          producer.produce(topic= output_topic,value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)),on_delivery=delivery_report)     
 
 
           # for i, element in enumerate(latency_arry):
@@ -588,7 +608,7 @@ if __name__ == '__main__':
           
           producer.flush()
           
-          print("\n\nData written successfully to :\t",output_topic)
+          #print("\n\nData written successfully to :\t",output_topic)
 
         
         if (output_type == 'localFileDump'):
