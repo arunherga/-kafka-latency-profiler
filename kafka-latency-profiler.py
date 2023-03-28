@@ -274,13 +274,13 @@ if __name__ == '__main__':
           
                   if value_deserializer == 'JSONSchemaDeserializer':
             
-                    user = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+                    message = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
 
                     #print(t)
             
                   elif value_deserializer == 'AvroDeserializer':
             
-                    user = avro_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+                    message = avro_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
                   # if deserializer == 'StringDeserializer':
                   #     user = string_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
                     #t = False
@@ -289,7 +289,7 @@ if __name__ == '__main__':
                   
             
                   #if ((user is not None) and (value_deserializer == ('JSONSchemaDeserializer' or 'AvroDeserializer'))) :
-                  if user is not None:
+                  if message is not None:
                       
                       count=count+1
                       
@@ -308,7 +308,7 @@ if __name__ == '__main__':
                   
                       elif (t1.split('.')[0]) =='value':
                           #i = t1.split('.')[1]
-                          time1 = user[t1.split('.')[1]]
+                          time1 = message[t1.split('.')[1]]
                   
                   
                       # elif (t1.split('.')[0]) == 'key':
