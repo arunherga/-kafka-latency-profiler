@@ -527,7 +527,7 @@ if __name__ == '__main__':
 
           producer=Producer(producer_properties)
             # datetime as key
-          producer.produce(topic= output_topic,key=string_serializer(str(f"Topic:{topic},consumer group id:{args.group_id}")),value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)),on_delivery=delivery_report)     
+          producer.produce(topic= output_topic,key=string_serializer(str(f"Topic:{topic},consumer group id:{args.group_id},Date Time:{date_string}")),value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)),on_delivery=delivery_report)     
           
           producer.flush()
           
