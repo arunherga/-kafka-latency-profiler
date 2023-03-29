@@ -5,7 +5,7 @@ from datetime import datetime
 from confluent_kafka import Consumer, TopicPartition, KafkaError,Producer
 from confluent_kafka.schema_registry.json_schema import JSONDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.serialization import SerializationContext, MessageField,StringDeserializer
+from confluent_kafka.serialization import SerializationContext, MessageField,StringSerializer
 from confluent_kafka.schema_registry.avro import AvroSerializer,AvroDeserializer
 import random
 import json
@@ -24,6 +24,7 @@ def read_ccloud_config(config_file):
     conf.pop('schema.registry.url', None)
     conf.pop('basic.auth.user.info', None)
     conf.pop('basic.auth.credentials.source', None)
+    
     return conf
 
 # def config_sorter(conf,use):
@@ -44,10 +45,17 @@ def read_ccloud_config(config_file):
 #         return props
 
 def read_sr_config(config_file):
-    conf = read_ccloud_config(config_file)
+    conf = {}
+    with open(config_file) as fh:
+        for line in fh:
+            line = line.strip()
+            if len(line) != 0 and line[0] != "#":
+                parameter, value = line.strip().split('=', 1)
+                conf[parameter] = value.strip()
     schema_registry_conf = {
-        'url': conf['schema.registry.url'],
-        'basic.auth.user.info': conf['basic.auth.user.info']}
+        'url':conf['schema.registry.url'],
+        'basic.auth.user.info':conf['basic.auth.user.info']}
+    
     return schema_registry_conf
    
    
@@ -86,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_topic', required=True, help='Kafka topic to consume messages from.')
     parser.add_argument('--group_id', default="newgroup01", help='A unique string that identifies the consumer group this consumer belongs to.')
     parser.add_argument('--enable_sampling',action="store_true",default=False,help='enable/disable sampling by 30 percent')
-    parser.add_argument('--run_interval',default=120,type=int,help='duration of time during which the consumer is actively running and consuming messages from a Kafka topic.')
+    parser.add_argument('--run_interval',default=20,type=int,help='duration of time during which the consumer is actively running and consuming messages from a Kafka topic.')
     parser.add_argument('--t1',default='IngestionTime',help='It is one of time parameter(used to measure latency->t2-t1). value.<column name> - this is pointer to message value timestamp i.e any column/object in value that points to event time. key.<column name> - this is pointer to message key timestamp i.e any column/object in key that points to event time. IngestionTime imply time when message is recorded in kafka topic.')
     parser.add_argument('--t2',default='consumerWallClockTime',choices={'consumerWallClockTime','IngestionTime'},help='It is one of the time parameter (used to measure latency->t2-t1). ConsumerWallClockTime -this is a pointer to the current time, as seen in the conusumer. IngestionTime imply time when message is recorded in kafka topic')
     parser.add_argument('--consumer_output',default='console',choices={'console','localFileDump','dumpToTopic'},help='console - Consumer output is printed in console. localFileDump - stores the output of consumer as a csv file and require to be followed by --result-dump-local-filepath. dumpToTopic - stores consumer output in kafka topic requires to be followed by --producer_config_file --output_topic')
@@ -94,13 +102,14 @@ if __name__ == '__main__':
     parser.add_argument('--output_topic',help='Kafka topic to dump consumer output')
     #parser.add_argument('--consumer_schema_json',default='None',help='File path of consumer JsonSchema')
     parser.add_argument('--value_deserializer',required=True,choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for value if t1 = value.<column name>.')
-    parser.add_argument('--key-deserializer',choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for key if t1 = key.<column name>.')
+    parser.add_argument('--key_deserializer',choices={'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'},help='Deserializer class for key if t1 = key.<column name>.')
     parser.add_argument('--producer_config_file',help='configuration file file that contains properties used to configure producer to output topic')
     parser.add_argument('--date_time_format',default='epoch',help='format of date time and has epoch as default')
 
 
 
     args = parser.parse_args()
+    
 
     consumer_properties = read_ccloud_config(args.consumer_config_file)
     topic=args.input_topic
@@ -142,7 +151,6 @@ if __name__ == '__main__':
     #     schema_str_key = schema_registary.get_schema(latest.schema_id)
    
     #     schema_str_key=schema_str_key.schema_str
-    #      #print(schema_str)
 
 
         # if key_deserializer == 'JSONSchemaDeserializer':         
@@ -177,9 +185,10 @@ if __name__ == '__main__':
         schema_present = True
 
 
+
         if value_deserializer == 'JSONSchemaDeserializer':         
 
-            json_deserializer = JSONDeserializer(schema_str=schema_str)
+            json_deserializer = JSONDeserializer(schema_str=schema_str)                
 
         
         
@@ -189,13 +198,14 @@ if __name__ == '__main__':
             schema_registry_client = SchemaRegistryClient(read_sr_config(args.consumer_config_file))
             
             avro_deserializer = AvroDeserializer(schema_registry_client=schema_registry_client,schema_str=schema_str)
+            
 
       
     
     
-    elif value_deserializer == 'StringDeserializer':
+    # elif value_deserializer == 'StringDeserializer':
     
-       string_deserializer = StringDeserializer(codec='utf_8')
+    #    string_deserializer = StringDeserializer(codec='utf_8')
 
     consumer=Consumer(consumer_properties)    
     
@@ -205,7 +215,7 @@ if __name__ == '__main__':
     
     print("Number of partition in the topic:",len(topic_partitions))
 
-    # total_message = 0
+    total_message = 0
     
     
     # for tp in topic_partitions:
@@ -223,6 +233,7 @@ if __name__ == '__main__':
     start_time=time.time()
     
     elapsed_time=0    
+    
 
     
 
@@ -230,8 +241,7 @@ if __name__ == '__main__':
 
         while elapsed_time<run_interval:
           
-            msg = consumer.poll(1.0)
-          
+            msg = consumer.poll(1.0)          
             
             #print(elapsed_time)
           
@@ -239,6 +249,7 @@ if __name__ == '__main__':
           
                 # print(f"Consumer will close in {int(run_interval-elapsed_time)}seconds")
                 #print("waiting")
+                elapsed_time = time.time()-start_time
                 continue
           
           
@@ -252,17 +263,20 @@ if __name__ == '__main__':
                 else:
           
                     print(f'Error while consuming from partition {msg.topic()}-{msg.partition()}: {msg.error()}')
+
+                    elapsed_time = time.time()-start_time
           
             else:
           
 
-                if schema_present:
+                if (schema_present == True):
 
           
           
                   if value_deserializer == 'JSONSchemaDeserializer':
             
                     message_value = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+                    
 
             
                   elif value_deserializer == 'AvroDeserializer':
@@ -279,9 +293,10 @@ if __name__ == '__main__':
                   #if ((user is not None) and (value_deserializer == ('JSONSchemaDeserializer' or 'AvroDeserializer'))) :
                   if message_value is not None:
                       
+                      
                       count=count+1
                 
-                      #print(user['ordertime']) 
+                      
                       if t1=="IngestionTime":
                           
                           time1=int(msg.timestamp()[1])
@@ -289,11 +304,16 @@ if __name__ == '__main__':
                   
                       elif (t1.split('.')[0]) =='value':
                           #check type 
+                       
                         if time_str == 'epoch':
+                       
                             time1 = message_value[t1.split('.')[1]]
+                       
                         else :
-                            time_obj = datetime.datetime.strptime(message_value[t1.split('.')[1]], time_str)
-                            time1 = time_obj.timestamp()
+                       
+                            time_obj = datetime.datetime.strptime(message_value[t1.split('.')[1]], time_str) 
+                            
+                            time1 = time_obj.timestamp() # returns time1 as a epoch time 
 
                             
                   
@@ -319,13 +339,11 @@ if __name__ == '__main__':
 
                       latency_arry.append(latency)
                 
-                if value_deserializer == 'JSONDeserializer': #string
+                if value_deserializer == 'StringDeserializer': #string
                     
                     if msg is not None:
                         
                         count = count+1
-
-                        #json.loads()
 
                         val = msg.value().decode('utf-8')
                         
@@ -362,8 +380,50 @@ if __name__ == '__main__':
                         latency = (time2-time1)
                         
                         latency_arry.append(latency)
+                
+                if value_deserializer == 'JSONDeserializer':
+
+                    if msg is not None:
+                
+                        message_value = json.loads(msg.value().decode('utf-8'))
+
+                        if t1=="IngestionTime":
+                          
+                          time1=int(msg.timestamp()[1])
+                          
+                  
+                        elif (t1.split('.')[0]) =='value':
+                            #check type 
+                            
+                            
+                            if time_str == 'epoch':
+                            
+                                time1 = message_value[t1.split('.')[1]]
+                            
+                            
+                            else :
+                            
+                                time_obj = datetime.datetime.strptime(message_value[t1.split('.')[1]], time_str) 
+                            
+                                time1 = time_obj.timestamp() # returns time1 as a epoch time 
+                        
+
+                        if t2 == 'IngestionTime':
+                  
+                          time2=int(msg.timestamp()[1])
+                  
+                  
+                        elif t2 == 'consumerWallClockTime':
+                    
+                            time2= time.time()*1000               
+                        
+                        latency = (time2-time1)
+
+                        latency_arry.append(latency)
+                        
+
         
-        elapsed_time = time.time()-start_time
+            elapsed_time = time.time()-start_time
 
 
 
@@ -455,17 +515,19 @@ if __name__ == '__main__':
                     "percentile95": int(quantiles[2]),
                     "percentile99": int(quantiles[3]),
                     "percentile999": int(quantiles[4]),
-                    "CurrentTime": str(date_string)
+                    "Date_Time": str(date_string)
                   }
 
 
-          schema_registry_client = SchemaRegistryClient(conf=read_ccloud_config(args.producer_config_file,'sr'))
+          schema_registry_client = SchemaRegistryClient(read_sr_config(args.producer_config_file))
 
           avro_serializer = AvroSerializer(schema_registry_client,schema_string)  
 
+          string_serializer = StringSerializer('utf_8')
+
           producer=Producer(producer_properties)
             # datetime as key
-          producer.produce(topic= output_topic,value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)),on_delivery=delivery_report)     
+          producer.produce(topic= output_topic,key=string_serializer(str(f"Topic:{topic},consumer group id:{args.group_id}")),value=avro_serializer(result, SerializationContext( output_topic, MessageField.VALUE)),on_delivery=delivery_report)     
           
           producer.flush()
           
