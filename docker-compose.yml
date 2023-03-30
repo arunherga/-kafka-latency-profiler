@@ -2,23 +2,12 @@ version: '3'
 
 services:
   app:
+    
     build: .
-    ports:
-      - "80:80"
-    # environment:
-    #   CONSUMER_CONFIG_FILE: "/app/client.properties"
-    #   INPUT_TOPIC: "json_schema"
-    #   GROUP_ID: "group104"
-    #   CONSUMER_OUTPUT: "dumpToTopic"
-    #   OUTPUT_TOPIC: "topic_12"
-    #   VALUE_DESERIALIZER: "JSONSchemaDeserializer"
-    #   RUN_INTERVAL: "15"
-    #   T1: "value.ordertime"
-    #   T2: "consumerWallClockTime"
-    #   PRODUCER_CONFIG_FILE: "/app/producer.properties"
-    #   ENABLE_SAMPLING: "" 
+
     env_file:
       -  ./command.env    
+    
     command: python3 kafka-latency-profiler.py --consumer_config_file ${CONSUMER_CONFIG_FILE} --input_topic ${INPUT_TOPIC} --group_id ${GROUP_ID} --consumer_output ${CONSUMER_OUTPUT} --output_topic ${OUTPUT_TOPIC} --value_deserializer ${VALUE_DESERIALIZER} --run_interval ${RUN_INTERVAL} --t1 ${T1} --t2 ${T2} --producer_config_file ${PRODUCER_CONFIG_FILE} --enable_sampling ${ENABLE_SAMPLING}
     #command: python3 kafka-latency-profiler.py --consumer_config_file ./client.properties --input_topic json_schema --group_id group106 --consumer_output dumpToTopic --output_topic topic_12 --value_deserializer JSONSchemaDeserializer --run_interval 15 --t1 value.ordertime --t2 consumerWallClockTime --producer_config_file ./producer.properties
     #command: python3 kafka-latency-profiler.py -h
