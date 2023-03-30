@@ -1,7 +1,7 @@
 
 # Kafka Latency Profiler
 
-It is a generic Kafka consumer that measures latency.
+A generic Kafka consumer that measures latency.
 
 
 
@@ -9,6 +9,7 @@ It is a generic Kafka consumer that measures latency.
 ## Deployment
 
 To deploy this project run the following command after providing required environment variables in `command.env` file . 
+Arguments that are not necessary for th usecase can be commented out by using `#` in front. 
 
 ```bash
   docker compose build
