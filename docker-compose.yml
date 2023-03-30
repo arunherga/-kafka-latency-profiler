@@ -10,4 +10,4 @@ services:
     env_file:
       -  ./command.env    
     
-    command: python3 kafka_latency_profiler.py --env_file ./command.env
+    command: python3 kafka-latency-profiler.py --env_file ./command.env
