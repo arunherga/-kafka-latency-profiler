@@ -8,7 +8,7 @@ A generic Kafka consumer that measures latency.
 
 ## Deployment
 
-To deploy this project run the following command after providing required environment variables in `command.env` file. 
+To deploy this project run the following command after providing required environment variables in `arguments.env` file. 
 Arguments that are not necessary for the usecase can be commented out by using `#` in front. 
 
 ```bash
