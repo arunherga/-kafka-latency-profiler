@@ -5,9 +5,6 @@ services:
     build: .
 
     volumes:
-      - /localdirectory/path:/app/data
-
-    env_file:
-      -  ./command.env    
+      - /localdirectory/path:/app/data  
     
     command: python3 kafka-latency-profiler.py --env_file ./arguements.env
