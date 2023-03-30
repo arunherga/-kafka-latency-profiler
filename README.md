@@ -27,14 +27,14 @@ To run this project, you will need to add the following environment variables to
 
 `--run_interval`  Duration of time during which the consumer is actively running and consuming messages from a Kafka topic set to 120seconds by defaulf.
 
-`--t1`  It is one of time parameter(used to measure latency->t2-t1). value.<column name> - this is pointer to message value timestamp i.e any column/object in value that points to event time. key.<column name> - this is pointer to message key timestamp i.e any column/object in key that points to event time. IngestionTime imply time when message is recorded in kafka topic. Set to IngestionTime by default.
+`--t1`  It is one of time parameter(used to measure latency->t2-t1). value.column name - this is pointer to message value timestamp i.e any column/object in value that points to event time. key.column name - this is pointer to message key timestamp i.e any column/object in key that points to event time. IngestionTime imply time when message is recorded in kafka topic. Set to IngestionTime by default.
 
 `--t2` It is one of the time parameter (used to measure latency->t2-t1). ConsumerWallClockTime -this is a pointer to the current time, as seen in the conusumer. IngestionTime imply time when message is recorded in kafka topic.
 Choices include - 'consumerWallClockTime' , 'IngestionTime'.
 
-`--value_deserializer` Deserializer class for value if t1 = value.<column name>. Choices include - 'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'
+`--value_deserializer` Deserializer class for value if t1 = value.column name. Choices include - 'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'
 
-`--key_deserializer` Deserializer class for key if t1 = key.<column name>.
+`--key_deserializer` Deserializer class for key if t1 = key.column name.
 Choices include - 'AvroDeserializer','JSONSchemaDeserializer','StringDeserializer','JSONDeserializer'
 
 `--date_time_format` format of date time and has epoch as default 
