@@ -5,7 +5,7 @@ services:
     build: .
 
     volumes:
-      - /home/arunherga/eve:/app/data
+      - /localdirectory/path:/app/data
 
     env_file:
       -  ./command.env    
