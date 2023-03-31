@@ -1,5 +1,4 @@
 
-import argparse
 import time
 from datetime import datetime
 from confluent_kafka import Consumer, TopicPartition, KafkaError,Producer
@@ -60,25 +59,8 @@ def delivery_report(err, msg):
     print('\n\n Latency measured successfully produced to {} Partition[{}] at offset {} with key {}'.format(msg.topic(), msg.partition(), msg.offset(),msg.key()))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   
 
-    parser = argparse.ArgumentParser(description='Kafka latency profiler')
-
-
-    parser.add_argument('--env_file',required=True,help='path to file containing environment variable')
-
-
-    args = parser.parse_args()
-
-    env_file = args.env_file
-
-    with open(env_file) as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                key, value = line.split("=")
-                os.environ[key] = value
-    
 
     consumer_properties = read_ccloud_config(os.getenv("CONSUMER_CONFIG_FILE"))
     topic=os.getenv("INPUT_TOPIC")
@@ -86,25 +68,20 @@ if __name__ == '__main__':
     consumer_properties['group.id']=os.getenv("GROUP_ID")
     sampling = os.getenv("ENABLE_SAMPLING")
     run_interval=os.getenv("RUN_INTERVAL")
-    if run_interval is None:
-        run_interval = 120
-    else:
-        run_interval=int(run_interval)
-    t1=os.getenv("T1")
-    if t1 is None:
-        t1 = 'IngestionTime'
+    print(type(run_interval))
+    run_interval=int(run_interval)
+    t1 = os.getenv("T1")
     t2=os.getenv("T2")
-    if t2 is None:
-        t2 = 'consumerWallClockTime'
     output_type=os.getenv("CONSUMER_OUTPUT")
     local_filepath=os.getenv("RESULT_DUMP_LOCAL_FILEPATH")
     output_topic=os.getenv("OUTPUT_TOPIC")
     value_deserializer = os.getenv("VALUE_DESERIALIZER")
     key_deserializer = os.getenv("KEY_DESERIALIZER")
-    producer_properties = read_ccloud_config(os.getenv("PRODUCER_CONFIG_FILE"))
+
+    if (os.getenv("PRODUCER_CONFIG_FILE")) != 'None':
+        producer_properties = read_ccloud_config(os.getenv("PRODUCER_CONFIG_FILE"))
     time_str = os.getenv("DATE_TIME_FORMAT")
-    if time_str is None:
-        time_str = 'epoch'
+    
     
 
     # fetching field 
@@ -116,6 +93,39 @@ if __name__ == '__main__':
       pattern = r'"{}":(\d+)'.format(field)
 
     print("\n\n\t\t\t\t\t\t\t\t\t\t\tConsumer has started!!\n")
+
+
+    if value_deserializer not in ['AvroDeserializer','JSONDeserializer','StringDeserializer','JSONSchemaDeserializer']:
+        
+        raise ValueError('Invalid input for VALUE_DESERIALIZER must be among AvroDeserializer,JSONDeserializer,StringDeserializer,JSONSchemaDeserializer')
+    
+    if key_deserializer not in ['AvroDeserializer','JSONDeserializer','StringDeserializer','JSONSchemaDeserializer']:
+        
+        raise ValueError('Invalid input for KEY_DESERIALIZER must be among AvroDeserializer,JSONDeserializer,StringDeserializer,JSONSchemaDeserializer')
+    
+    if t2 not in ['IngestionTime','consumerWallClockTime']:
+        
+        raise NameError("Invalid input for T2 must be one of IngestionTime, consumerWallClockTime")
+    
+    if (t1 == t2 == 'IngestionTime'):
+
+        raise ValueError("Both T1 and T2 cannot be IngestionTime")
+    
+    if (output_type == 'dumpToTopic'):
+
+        if (os.getenv("PRODUCER_CONFIG_FILE") == 'None'):
+
+            raise ValueError(" To dump latency measured to kafka topic must provide producer configuration file path to PRODUCER_CONFIG_FILE")
+        
+        elif (output_topic is None):
+
+            raise ValueError("To dump latency measured to kafka topic, topic name must be provided in OUTPUT_TOPIC")
+    
+    if (output_topic == 'localFileDump'):
+
+        if (local_filepath is None):
+
+            raise ValueError("To dump latency measured to local file, file path must be provided in RESULT_DUMP_LOCAL_FILEPATH")
 
 
     schema_present = False
@@ -323,7 +333,7 @@ if __name__ == '__main__':
 
                         val = msg.value().decode('utf-8')
                         
-                        match = re.search(pattern,val)
+                        
                         
                         if t1=="IngestionTime":
                         
@@ -331,6 +341,8 @@ if __name__ == '__main__':
                         
                         
                         elif (t1.split('.')[0]) =='value':
+
+                            match = re.search(pattern,val)
                         
                             time1 = int(match.group(1))
                         
@@ -356,7 +368,7 @@ if __name__ == '__main__':
 
                         val = msg.key().decode('utf-8')
                         
-                        match = re.search(pattern,val)
+                        
                         
                         if t1=="IngestionTime":
                         
@@ -364,6 +376,8 @@ if __name__ == '__main__':
                         
                         
                         elif (t1.split('.')[0]) =='key':
+
+                            match = re.search(pattern,val)
                         
                             time1 = int(match.group(1))
                         
