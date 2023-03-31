@@ -5,6 +5,10 @@ services:
     build: .
 
     volumes:
-      - /localdirectory/path:/app/data  
+      - /home/arunherga/eve:/app/data 
     
-    command: python3 kafka-latency-profiler.py --env_file /app/data/arguments.env
+    env_file:
+      - /home/arunherga/eve/arguments.env
+      
+
+    command: python3 kafka-latency-profiler.py
