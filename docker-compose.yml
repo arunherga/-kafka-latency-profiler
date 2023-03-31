@@ -7,4 +7,4 @@ services:
     volumes:
       - /localdirectory/path:/app/data  
     
-    command: python3 kafka-latency-profiler.py --env_file ./arguments.env
+    command: python3 kafka-latency-profiler.py --env_file /app/data/arguments.env
