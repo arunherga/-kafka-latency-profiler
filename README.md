@@ -55,6 +55,6 @@ Choices include - 'AvroDeserializer','JSONSchemaDeserializer','StringDeserialize
 
 `PRODUCER_CONFIG_FILE` configuration file that contains properties used to configure producer to output topic
 
-`ENABLE_SAMPLING` Enables/Disables sampling. valid arguments are True/False
+`ENABLE_SAMPLING` Enables/Disables sampling. valid arguments are True/False . Default is False
 
 

@@ -115,17 +115,37 @@ if __name__ == '__main__':
 
         if (os.getenv("PRODUCER_CONFIG_FILE") == 'None'):
 
-            raise ValueError(" To dump latency measured to kafka topic must provide producer configuration file path to PRODUCER_CONFIG_FILE")
+            raise ValueError(" To store latency measured to kafka topic must provide producer configuration file path to PRODUCER_CONFIG_FILE")
         
         elif (output_topic is None):
 
-            raise ValueError("To dump latency measured to kafka topic, topic name must be provided in OUTPUT_TOPIC")
+            raise ValueError("To store latency measured to kafka topic, topic name must be provided in OUTPUT_TOPIC")
     
     if (output_topic == 'localFileDump'):
 
         if (local_filepath is None):
 
-            raise ValueError("To dump latency measured to local file, file path must be provided in RESULT_DUMP_LOCAL_FILEPATH")
+            raise ValueError("To store latency measured to local file, file path must be provided in RESULT_DUMP_LOCAL_FILEPATH")
+        
+    
+
+    t1_key_cloumn = False
+
+    t1_value_column = False
+
+
+    if t1=="IngestionTime":
+
+        pass
+    
+    elif (t1.split('.')[0]) =='key':
+
+        t1_key_cloumn = True
+
+    elif (t1.split('.')[0]) =='value':
+
+        t1_value_column = True
+
 
 
     schema_present = False
@@ -285,7 +305,7 @@ if __name__ == '__main__':
                           time1=int(msg.timestamp()[1])
                           
                   
-                      elif (t1.split('.')[0]) =='value':
+                      elif t1_value_column:
                           #check type 
                        
                             if time_str == "epoch":
@@ -298,7 +318,7 @@ if __name__ == '__main__':
                                 
                                 time1 = time_obj.timestamp() # returns time1 as a epoch time 
                       
-                      elif (t1.split('.')[0]) =='key':
+                      elif t1_key_cloumn:
                           #check type 
                        
                             if time_str == "epoch":
@@ -325,7 +345,7 @@ if __name__ == '__main__':
 
                       latency_arry.append(latency)
                 
-                elif value_deserializer == 'StringDeserializer': #string
+                elif ((value_deserializer == 'StringDeserializer') and t1_value_column): #string
                     
                     if msg is not None:
                         
@@ -360,7 +380,7 @@ if __name__ == '__main__':
                         
                         latency_arry.append(latency)
 
-                elif key_deserializer == 'StringDeserializer': #string
+                elif ((key_deserializer == 'StringDeserializer') and t1_key_cloumn ): #string
                     
                     if msg is not None:
                         
@@ -396,7 +416,7 @@ if __name__ == '__main__':
                         
                         latency_arry.append(latency)
                 
-                elif value_deserializer == 'JSONDeserializer':
+                elif ((value_deserializer == 'JSONDeserializer') and t1_value_column):
 
                     if msg is not None:
 
@@ -438,7 +458,7 @@ if __name__ == '__main__':
 
                         latency_arry.append(latency)
                 
-                elif key_deserializer == 'JSONDeserializer':
+                elif ((key_deserializer == 'JSONDeserializer') and t1_key_cloumn):
 
                     if msg is not None:
 
