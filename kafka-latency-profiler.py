@@ -94,6 +94,23 @@ if __name__ == '__main__':
 
     print("\n\n\t\t\t\t\t\t\t\t\t\t\tConsumer has started!!\n")
 
+    t1_key_cloumn = False
+
+    t1_value_column = False
+
+
+    if t1=="IngestionTime":
+
+        pass
+    
+    elif (t1.split('.')[0]) =='key':
+
+        t1_key_cloumn = True
+
+    elif (t1.split('.')[0]) =='value':
+
+        t1_value_column = True
+
 
     if value_deserializer not in ['AvroDeserializer','JSONDeserializer','StringDeserializer','JSONSchemaDeserializer']:
         
@@ -102,6 +119,15 @@ if __name__ == '__main__':
     if key_deserializer not in ['AvroDeserializer','JSONDeserializer','StringDeserializer','JSONSchemaDeserializer']:
         
         raise ValueError('Invalid input for KEY_DESERIALIZER must be among AvroDeserializer,JSONDeserializer,StringDeserializer,JSONSchemaDeserializer')
+    
+    if t1 =="IngestionTime":
+        
+        pass
+    
+    elif (t1_key_cloumn or t1_value_column):
+
+        raise NameError('Invalid input for T1 must be among IngestionTime or value.column name or key.column name ')
+
     
     if t2 not in ['IngestionTime','consumerWallClockTime']:
         
@@ -129,22 +155,7 @@ if __name__ == '__main__':
         
     
 
-    t1_key_cloumn = False
-
-    t1_value_column = False
-
-
-    if t1=="IngestionTime":
-
-        pass
     
-    elif (t1.split('.')[0]) =='key':
-
-        t1_key_cloumn = True
-
-    elif (t1.split('.')[0]) =='value':
-
-        t1_value_column = True
 
 
 
