@@ -124,7 +124,7 @@ if __name__ == '__main__':
         
         pass
     
-    elif (t1_key_cloumn or t1_value_column):
+    elif ((t1_key_cloumn == False) and (t1_value_column == False)):
 
         raise NameError('Invalid input for T1 must be among IngestionTime or value.column name or key.column name ')
 
