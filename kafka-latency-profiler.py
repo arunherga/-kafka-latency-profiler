@@ -147,9 +147,9 @@ if __name__ == '__main__':
 
             raise ValueError("To store latency measured to kafka topic, topic name must be provided in OUTPUT_TOPIC")
     
-    if (output_topic == 'localFileDump'):
+    if (output_type == 'localFileDump'):
 
-        if (local_filepath is None):
+        if (local_filepath == 'None'):
 
             raise ValueError("To store latency measured to local file, file path must be provided in RESULT_DUMP_LOCAL_FILEPATH")
         
