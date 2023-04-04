@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
     schema_present = False
 
-    if (key_deserializer == ('AvroDeserializer') or key_deserializer == ('JSONSchemaDeserializer')):
+    if ((key_deserializer == ('AvroDeserializer') or key_deserializer == ('JSONSchemaDeserializer')) and t1_key_cloumn):
     
         schema_registry =SchemaRegistryClient(read_sr_config(os.getenv("CONSUMER_CONFIG_FILE")))
    
@@ -190,7 +190,7 @@ if __name__ == '__main__':
    
     
 
-    if (value_deserializer == ('AvroDeserializer') or value_deserializer == ('JSONSchemaDeserializer')):
+    if ((value_deserializer == ('AvroDeserializer') or value_deserializer == ('JSONSchemaDeserializer')) and t1_value_column):
     
         schema_registry =SchemaRegistryClient(read_sr_config(os.getenv("CONSUMER_CONFIG_FILE")))
    
