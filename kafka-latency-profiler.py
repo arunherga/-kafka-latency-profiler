@@ -281,25 +281,25 @@ if __name__ == '__main__':
                   
 
 
-                  if key_deserializer == 'JSONSchemaDeserializer':
+                  if ((key_deserializer == 'JSONSchemaDeserializer') and t1_key_cloumn):
             
                     message_value = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
                     
 
             
-                  elif key_deserializer == 'AvroDeserializer' :
+                  elif ((key_deserializer == 'AvroDeserializer') and t1_key_cloumn) :
             
                     message_value = avro_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
 
           
           
-                  elif value_deserializer == 'JSONSchemaDeserializer':
+                  elif ((value_deserializer == 'JSONSchemaDeserializer') and t1_value_column):
             
                     message_value = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
                     
 
             
-                  elif value_deserializer == 'AvroDeserializer' :
+                  elif ((value_deserializer == 'AvroDeserializer') and t1_value_column) :
             
                     message_value = avro_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
                   
